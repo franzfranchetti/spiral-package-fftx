@@ -1,0 +1,179 @@
+\documentclass[times, 10pt,onecolumn]{article}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{paralist}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{xspace}
+\usepackage{subfigure}
+
+
+%\documentstyle[times,art10,twocolumn,latex8]{article}
+
+%-------------------------------------------------------------------------
+% take the % away on next line to produce the final camera-ready version
+\pagestyle{empty}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+
+\def\transpose{\top}
+
+
+\newcommand{\gathermat}{\operatorname{G}}
+\newcommand{\scattermat}{\operatorname{S}}
+\newcommand{\dctmat}{C}
+\newcommand{\permmat}[1]{\operatorname{perm}\big({#1}\big)}
+\newcommand{\diagmat}[1]{\operatorname{diag}\big({#1}\big)}
+
+\newcommand{\DFT}{\operatorname{DFT}}
+\newcommand{\PDFTIII}{\operatorname{PRDFT}\text{-}3}
+\newcommand{\MDDFT}{\operatorname{MDDFT}}
+\newcommand{\TwoDDCT}{\operatorname{2D-DCT}}
+\newcommand{\WHT}{\operatorname{WHT}}
+\newcommand{\stride}{\operatorname{L}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\tensor}{\otimes}
+\newcommand{\dirsum}{\oplus}
+\newcommand{\one}{\operatorname{I}}
+\newcommand{\J}{\operatorname{J}}
+\newcommand{\twiddle}{\operatorname{T}}
+\newcommand{\parit}[1]{\underbrace{#1}_{\mathrm{par}(p)}}
+\newcommand{\libcall}[1]{\underbrace{#1}_{\mathrm{lib}}}
+\newcommand{\ptensor}{\otimes_{\|}}
+%\newcommand{\bundle}[1]{\underline{#1}}
+\newcommand{\bundle}[1]{#1}
+\newcommand{\DCT}[1]{\operatorname{DCT}\text{-}#1}
+
+\newcommand{\mypar}[1]{{\bf #1.}}
+
+\newcommand{\raderperm}{W}
+\newcommand{\crtperm}{V}
+
+
+\newcommand{\fCompose}{\circ}
+\newcommand{\fTensor}{\tensor}
+\newcommand{\fDirsum}{\dirsum}
+\newcommand{\fGammatensor}{\boxtimes}
+\newcommand{\fAlternator}[3]{\left\langle#1|#2\right\rangle_{#3}}
+
+\newcommand{\fStack}[2]{\left[#1/#2\right]}
+
+\newcommand{\fId}[1]{\imath_{#1}}
+\newcommand{\fJ}[1]{\jmath_{#1}}
+\newcommand{\fBase}[2]{\left(#2\right)_{#1}}
+
+\newcommand{\fStride}[2]{\ell^{#1}_{#2}}
+\newcommand{\fL}[2]{\ell^{#1}_{#2}}
+\newcommand{\fOstride}[2]{\overline{\ell}^{#1}_{#2}}
+\newcommand{\fTwiddle}[2]{\operatorname{t}^{#1}_{#2}}
+\newcommand{\fT}[2]{\operatorname{t}^{#1}_{#2}}
+
+\newcommand{\fZshift}[2]{\operatorname{z}_{#1}^{#2}}
+
+\newcommand{\fZero}[1]{\operatorname{o}^{#1\rightarrow \C}}
+\newcommand{\fOne}[1]{\operatorname{\imath}^{#1\rightarrow \C}}
+\newcommand{\fDelta}[2]{\delta^{#1}_{#2}}
+
+
+\newcommand{\Gath}[1]{\ensuremath{\operatorname{G}_{#1}}}
+\newcommand{\Scat}[1]{\ensuremath{\operatorname{S}_{#1}}}
+\newcommand{\ISum}[2]{\ensuremath{\sum\limits_{#1}^{#2}}}
+\newcommand{\SMPSum}[2]{\ensuremath{{\sum\limits_{#1}^{#2}}{\hspace{-7pt}}_{\tiny\|}\hspace{4pt}}}
+
+\newcommand{\Perm}[1]{\ensuremath{\operatorname{perm}\big({#1}\big)}}
+\newcommand{\Diag}[1]{\ensuremath{\operatorname{diag}\big(#1\big)}}
+
+\newcommand{\ifunc}[3]{{#1}^{#2\rightarrow #3}}
+\newcommand{\dfunc}[2]{{#1}^{#2\rightarrow \C}}
+\newcommand{\pfunc}[2]{{#1}^{#2 \circlearrowleft}}
+
+\newcommand{\interval}{\mathbb{I}}
+\newcommand{\zerofunc}{\operatorname{o}}
+\newcommand{\onefunc}{\imath}
+
+\newcommand{\II}[1]{\interval_{#1}}
+\newcommand{\fInterval}[1]{\interval_{#1}}
+
+\def\rho{w}
+\def\rhobar{\overline{w}}
+\newcommand{\fRm}[4]{\rho^{#2\rightarrow #1}_{#3,#4}}
+\newcommand{\fRM}[4]{\rho^{#2\rightarrow #1}_{#3,#4}}
+\newcommand{\fRr}[3]{\rhobar^{#1}_{#2,#3}}
+\newcommand{\fRR}[3]{\rhobar^{#1}_{#2,#3}}
+\newcommand{\fRrr}[2]{\rhobar^{#1}_{#2}}
+\newcommand{\fRH}[5]{\sigma^{#2\rightarrow #1}_{#3,#4,#5}}
+
+\newcommand{\function}[4]{#1:#2\rightarrow #3;\ i\mapsto #4}
+\newcommand{\pfunction}[3]{#1:#2\rightarrow #2;\ i\mapsto #3}
+\newcommand{\fct}[3]{#1^{#2\rightarrow #3}}
+\newcommand{\fDot}[2]{\underbrace{#1}_{#2}}
+\newcommand{\fAdd}[3]{(#3)^{#2\rightarrow #1}_{+}}
+
+
+\newcommand{\fH}[4]{h^{#2\rightarrow #1}_{#3,#4}}
+\newcommand{\fHZ}[4]{\hbar^{#2\rightarrow #1}_{#3,#4}}
+\newcommand{\fCRT}[2]{\operatorname{v}^{#1,#2}}
+
+\newcommand{\basisvect}{e}
+\newcommand{\local}{\text{local } i}
+
+\newcommand{\fXbase}[3]{\xpf^{#2,#3}_{#1}}
+\newcommand{\fIJ}[2]{\operatorname{v}^{#1}_{#2}}
+\newcommand{\rref}[1]{rule~\eqref{#1}}
+\newcommand{\tableref}[1]{Table~\ref{#1}}
+\newcommand{\figref}[1]{Fig.~\ref{#1}}
+
+\newcommand{\sspl}{$\Sigma$-SPL\xspace}
+
+\def\idiv#1#2{\left\lfloor\frac{#1}{#2}\right\rfloor}
+\def\iidiv#1#2{\frac{#1}{#2}}
+\def\rmaps{\rightarrow}
+\def\ssplcomp{\sspl{} compiler}
+
+
+
+
+
+
+
+
+
+%-------------------------------------------------------------------------
+\begin{document}
+
+\title{Short-Vector Cooley-Tukey DCT Rules}
+
+\author{Yevgen Voronenko and Franz Franchetti}
+
+\maketitle
+\thispagestyle{empty}
+
+
+
+
+%-------------------------------------------------------------------------
+
+
+\begin{eqnarray*}
+\DCT{4}_{2mn} & \rightarrow &
+\big(\underbrace{\one_{n}\dirsum\J_{n}\dirsum\dots}_{m \text{ times}}\big)\\&&
+\big(\big(M^{2m}_m(\one_{m}\dirsum(-\one_{m}))\PDFTIII_{2m, -1}^\top\big)\tensor\one_n\big)\\&&
+L^{2mn}_{2m}\overline{D^{2mn}_{m,n}}L^{2mn}_{n}\\&&
+\big(\one_m\tensor\big(L^{2n}_2\PDFTIII_{2n}(\one_{n}\dirsum(-\one_{n}))K^{2n}_2\big)\big)L^{2mn}_{2n}\\&&
+\big(\underbrace{\one_{m}\dirsum\J_{m}\dirsum\dots}_{n \text{ times}}\big)\\
+\DCT{2}_{2mn} & \rightarrow &
+(2\one_1\dirsum\one_{2mn-1})S_{2mn}^\top\DCT{4}_{2mn}E_{2mn}\\
+\DCT{3}_{2mn} & \rightarrow &
+\DCT{2}_{2mn}^\top\\
+D^{2mn}_{m,n} & = & \diag_{0\leq i <2mn}\left(\omega_{16mn}^{\left(2\left\lfloor\frac{i}{2m}\right\rfloor+1\right)\left(2(i\ \text{mod}\ m)+1\right)}\right)\\
+E_{n} & = & \diag_{0\leq i <n}\left(\frac{1}{2\cos \frac{(2i+1)\pi}{4n}}\right)
+\end{eqnarray*}
+
+\end{document}
