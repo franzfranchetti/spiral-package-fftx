@@ -31,10 +31,10 @@ conv2 := SUM(
     Scat(fTensor(fBase(2,1), fId(m))) * conv11 * Gath(fTensor(fBase(2,1), fId(m))));
 InfinityNormMat(MatSPL(conv2) - convm);
 
-conv00t := Toeplitz(filt{[2..m]}::filt{[1]}::Reversed(filt{[m+2..2*m]}));
+conv00t := Toeplitz(Reversed(filt{[2..m]})::filt{[1]}::Reversed(filt{[m+2..2*m]}));
 conv11t := conv00t;
 conv01t := Toeplitz(Reversed(filt{[2..2*m]}));
-conv10t := Toeplitz(filt{[m+2..2*m]}::filt{[m+1]}::Reversed(filt{[2..m]}));
+conv10t := Toeplitz(Reversed(filt{[m+2..2*m]})::filt{[m+1]}::Reversed(filt{[2..m]}));
 
 pm(conv00t);
 pm(conv01t);
