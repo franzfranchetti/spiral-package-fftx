@@ -59,9 +59,7 @@ rstep1 := irdft1 * rcdiag1 * rdft1;
 InfinityNormMat(MatSPL(step1) - MatSPL(rstep1));
 
 # fast algorithm for step2
-# sigma derivation to be cleaned up
 m := n/2;
-
 q := 1/(Sqrt(2))*VStack(
     HStack(Mat([[Sqrt(2)]]), O(1, n-1)),
     HStack(O(n/2-1,1), I(n/2-1), O(n/2-1,1), J(n/2-1)),
@@ -69,68 +67,18 @@ q := 1/(Sqrt(2))*VStack(
     HStack(O(n/2-1,1), -J(n/2-1), O(n/2-1,1), I(n/2-1))
 );
 
-qt := q.transpose();
 scale := Diag([1/Sqrt(2)]::Replicate(m-1, 1));
 qtut := DirectSum(scale * DCT2(m), scale * J(m)*DST2(m)*J(m));
-
-sigmat := Sqrt(2) * qtut.transpose()* qt;
-ut := MatSPL(sigmat) * filt2;
-
-alpha := 2/m*ut{[1..m]};
-beta := 2/m*Reversed(ut{[m+1..2*m]});
-
-sigma := VStack(
-    HStack(Diag(alpha), J(Length(beta))*Diag(Reversed(beta))),
-    HStack(-J(Length(beta))*Diag(beta), Diag(Reversed(alpha))));
-    
 sigmaq := DirectSum(I(m), J(m)) * L(n,2);
-sigmad := sigma^sigmaq;
-sigmad2 := RCDiag(FList(TReal, Flat(Zip2(alpha, -beta))));
-InfinityNormMat(MatSPL(sigmad)-MatSPL(sigmad2));    
+sq := sigmaq.transpose() * qtut.transpose() * q.transpose();
+sigmat2 := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * sq;
 
-sigmaq := DirectSum(I(m), J(m)) * L(n,2);
-sigmat2 := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * sigmaq.transpose() * qtut.transpose()* qt;
 ut2 := MatSPL(sigmat2) * filt2;
 sigmad2 := RCDiag(FList(TReal, ut2));
 
-sq := sigmaq.transpose() * qtut.transpose() * qt;
-rstep2a := sq.transpose() * sigmad2 * sq;
-
-
-sigma2 := sigmaq * sigmad2 * sigmaq.transpose();
-InfinityNormMat(MatSPL(sigma2)-MatSPL(sigma));    
-
-rstep2 :=  q * qtut * sigma * qtut.transpose() * qt;
-rstep2d := q * qtut * sigmaq * sigmad2 * sigmaq.transpose() * qtut.transpose() * qt;
-
+rstep2 := sq.transpose() * sigmad2 * sq;
 InfinityNormMat(MatSPL(step2) - MatSPL(rstep2));
-InfinityNormMat(MatSPL(step2) - MatSPL(rstep2d));
-InfinityNormMat(MatSPL(step2) - MatSPL(rstep2a));
 
 # full algorithm = real step1 + real step2
 rconv := SUM(rstep1, rstep2);
 InfinityNormMat(MatSPL(rconv) - convm);
-
-#==============================================================================
-# separable 2D case
-
-conv2d := Tensor(conv, conv);
-conv2dm := MatSPL(conv2d);
-
-rconv2d11 := Tensor(rstep1, rstep1);
-rconv2d12 := Tensor(rstep1, rstep2);
-rconv2d21 := Tensor(rstep2, rstep1);
-rconv2d22 := Tensor(rstep2, rstep2);
-rconv2d := SUM(rconv2d11, rconv2d12, rconv2d21, rconv2d22);
-
-InfinityNormMat(MatSPL(rconv2d) - conv2dm);
-
-#==============================================================================
-# separable 3D/nD case
-
-d := 3;
-convnd := ApplyFunc(Tensor, Replicate(d, conv));
-convndm := MatSPL(convnd);
-
-rconvnd := ApplyFunc(SUM, List(ApplyFunc(Cartesian, Replicate(d, [rstep1, rstep2])), Tensor));
-InfinityNormMat(MatSPL(rconvnd) - convndm);
