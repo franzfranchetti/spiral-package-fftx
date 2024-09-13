@@ -88,6 +88,15 @@ sigmad := sigma^sigmaq;
 sigmad2 := RCDiag(FList(TReal, Flat(Zip2(alpha, -beta))));
 InfinityNormMat(MatSPL(sigmad)-MatSPL(sigmad2));    
 
+sigmaq := DirectSum(I(m), J(m)) * L(n,2);
+sigmat2 := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * sigmaq.transpose() * qtut.transpose()* qt;
+ut2 := MatSPL(sigmat2) * filt2;
+sigmad2 := RCDiag(FList(TReal, ut2));
+
+sq := sigmaq.transpose() * qtut.transpose() * qt;
+rstep2a := sq.transpose() * sigmad2 * sq;
+
+
 sigma2 := sigmaq * sigmad2 * sigmaq.transpose();
 InfinityNormMat(MatSPL(sigma2)-MatSPL(sigma));    
 
@@ -96,6 +105,7 @@ rstep2d := q * qtut * sigmaq * sigmad2 * sigmaq.transpose() * qtut.transpose() *
 
 InfinityNormMat(MatSPL(step2) - MatSPL(rstep2));
 InfinityNormMat(MatSPL(step2) - MatSPL(rstep2d));
+InfinityNormMat(MatSPL(step2) - MatSPL(rstep2a));
 
 # full algorithm = real step1 + real step2
 rconv := SUM(rstep1, rstep2);

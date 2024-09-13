@@ -35,11 +35,33 @@ sigma := VStack(
 sigma2 := (2/m)^2 * qtut.transpose()* qt * sf * q * qtut;
 InfinityNormMat(MatSPL(sigma2) - MatSPL(sigma));
 
-s :=  q * qtut * sigma * qtut.transpose() * qt;
+sigmaq := DirectSum(I(m), J(m)) * L(n,2);
+sigmad := sigma^sigmaq;
+
+#do the RCDiag() it directly
+sigmat2 := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * sigmaq.transpose() * qtut.transpose()* qt;
+ut2 := MatSPL(sigmat2) * s1;
+sdl := Flat(Zip2(alpha, -beta));
+sdl = ut2;
+
+sigmad2 := RCDiag(FList(TReal, ut2));
+InfinityNormMat(MatSPL(sigmad)-MatSPL(sigmad2));    
+
+sigma2a := sigmaq * sigmad2 * sigmaq.transpose();
+InfinityNormMat(MatSPL(sigma2a)-MatSPL(sigma));    
+
+# transform
+sq := sigmaq.transpose() * qtut.transpose() * qt;
+s := sq.transpose() * sigmad2 * sq;
+
+# baseline
+s2 :=  q * qtut * sigma * qtut.transpose() * qt;
 sc := SkewCirculant(MatSPL(s)[1]);
 
 InfinityNormMat(MatSPL(sc) - MatSPL(s));
 InfinityNormMat(MatSPL(sc) - MatSPL(sf));
+InfinityNormMat(MatSPL(s2) - MatSPL(s));
+
 
 #=======================================
 # now deriving sigma
