@@ -1,15 +1,25 @@
+# 2-way parallel 1D real convolution
+#
+# break free space convolution -> circulant + skew-circulant
+# break both circulant and skew-circulant into 2x2 Toeplitz
+# do 2 Toeplitz on proc0, and 2 on proc1
+# either broadcast all data or reduce+ at the end
+# 2x n/2*sizeof(real) data packets transmitted, rest independent
+# scales to higher dimensions, thus 3d -> 8-way parallel
+
 ImportAll(realdft);
 ImportAll(filtering);
 ImportAll(dct_dst);
 
 SkewCirculant := l -> Toeplitz(Reversed(l)::(-DropLast(Reversed(l), 1)));
 
-m := 2;
+# set up problem
+m := 8;
 n := 2*m;
 range := [1..n];
 filt := List(range, i->Random([1..100]));
 
-# circulant case
+# Circulant case --------------------------------------------------------------
 conv := Circulant(filt);
 convm := MatSPL(conv);
 pm(convm);
@@ -51,3 +61,47 @@ pconv2 := Scat(fTensor(fBase(2,1), fId(m))) * SUM(conv10t * Gath(fTensor(fBase(2
 
 pconv := SUM(pconv1, pconv2);
 InfinityNormMat(MatSPL(pconv) - convm);
+
+# Skew-Circulant case ---------------------------------------------------------
+sconv := SkewCirculant(filt);
+sconvm := MatSPL(sconv);
+pm(sconvm);
+
+sconv00 := Gath(fTensor(fBase(2,0), fId(m))) * sconv * Scat(fTensor(fBase(2,0), fId(m)));
+sconv01 := Gath(fTensor(fBase(2,0), fId(m))) * sconv * Scat(fTensor(fBase(2,1), fId(m)));
+sconv10 := Gath(fTensor(fBase(2,1), fId(m))) * sconv * Scat(fTensor(fBase(2,0), fId(m)));
+sconv11 := Gath(fTensor(fBase(2,1), fId(m))) * sconv * Scat(fTensor(fBase(2,1), fId(m)));
+
+pm(sconv00);
+pm(sconv01);
+pm(sconv10);
+pm(sconv11);
+
+sconv2 := SUM(
+    Scat(fTensor(fBase(2,0), fId(m))) * sconv00 * Gath(fTensor(fBase(2,0), fId(m))), 
+    Scat(fTensor(fBase(2,0), fId(m))) * sconv01 * Gath(fTensor(fBase(2,1), fId(m))), 
+    Scat(fTensor(fBase(2,1), fId(m))) * sconv10 * Gath(fTensor(fBase(2,0), fId(m))), 
+    Scat(fTensor(fBase(2,1), fId(m))) * sconv11 * Gath(fTensor(fBase(2,1), fId(m))));
+InfinityNormMat(MatSPL(sconv2) - sconvm);
+
+sconv00t := Toeplitz(Reversed(filt{[2..m]})::filt{[1]}::Reversed(-filt{[m+2..2*m]}));
+sconv11t := sconv00t;
+sconv01t := Toeplitz(Reversed(filt{[2..2*m]}));
+sconv10t := Toeplitz(-(Reversed(filt{[m+2..2*m]})::filt{[m+1]}::Reversed(filt{[2..m]})));
+
+pm(sconv00t);
+pm(sconv01t);
+pm(sconv10t);
+pm(sconv11t);
+
+InfinityNormMat(MatSPL(sconv00) - MatSPL(sconv00t));
+InfinityNormMat(MatSPL(sconv01) - MatSPL(sconv01t));
+InfinityNormMat(MatSPL(conv10) - MatSPL(conv10t));
+InfinityNormMat(MatSPL(sconv11) - MatSPL(sconv11t));
+
+psconv1 := Scat(fTensor(fBase(2,0), fId(m))) * SUM(sconv00t * Gath(fTensor(fBase(2,0), fId(m))), sconv01t * Gath(fTensor(fBase(2,1), fId(m))));
+psconv2 := Scat(fTensor(fBase(2,1), fId(m))) * SUM(sconv10t * Gath(fTensor(fBase(2,0), fId(m))), sconv11t * Gath(fTensor(fBase(2,1), fId(m))));
+
+psconv := SUM(psconv1, psconv2);
+InfinityNormMat(MatSPL(psconv) - sconvm);
+
