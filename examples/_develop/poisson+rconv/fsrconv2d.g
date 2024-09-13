@@ -6,7 +6,7 @@ ImportAll(filtering);
 ImportAll(dct_dst);
 
 SkewCirculant := l -> Toeplitz(Reversed(l)::(-DropLast(Reversed(l), 1)));
-_rcdiag := lst -> RCDiag(FList(TReal, List(Zip2(lst, Flat(Replicate(Length(lst)/2, [1, -1]))), Product)));
+RotDiag := lst -> RCDiag(FList(TReal, List(Zip2(lst, Flat(Replicate(Length(lst)/2, [1, -1]))), Product)));
 
 #==============================================================================
 # problem setup
@@ -49,7 +49,7 @@ idtt2d := List(Cartesian(idtts, idtts), i->ApplyFunc(Tensor, i));
 
 # filter taps -- that's probably not right
 taps := List(dtt2d, i->MatSPL(i)*filt);
-rcds := List(taps, _rcdiag);
+rcds := List(taps, RotDiag);
 
 # 2d rconv
 convs := List([1..4], i-> idtt2d[i] * rcds[i] * dtt2d[i]);

@@ -5,7 +5,6 @@
 # do 2 Toeplitz on proc0, and 2 on proc1
 # either broadcast all data or reduce+ at the end
 # 2x n/2*sizeof(real) data packets transmitted, rest independent
-# scales to higher dimensions, thus 3d -> 8-way parallel
 
 ImportAll(realdft);
 ImportAll(filtering);

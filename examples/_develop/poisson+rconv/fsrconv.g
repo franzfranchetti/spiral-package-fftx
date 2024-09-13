@@ -20,6 +20,7 @@ ImportAll(filtering);
 ImportAll(dct_dst);
 
 SkewCirculant := l -> Toeplitz(Reversed(l)::(-DropLast(Reversed(l), 1)));
+RotDiag := lst -> RCDiag(FList(TReal, List(Zip2(lst, Flat(Replicate(Length(lst)/2, [1, -1]))), Product)));
 
 #==============================================================================
 # problem setup
@@ -79,8 +80,8 @@ InfinityNormMat(MatSPL(convcs) - convm);
 # Fast Real 1D Free Space Convolution without Domain Doubling
 
 # fast algorithm for step1
-drf1 := Flat(List(symbf{[1..n/2+1] * 2 - 1}, a->[Re(a), -Im(a)]));
-rcdiag1 := RCDiag(FList(TReal, drf1));
+drf1 := Flat(List(symbf{[1..n/2+1] * 2 - 1}, a->[Re(a), Im(a)]));
+rcdiag1 := RotDiag(drf1);
 rdft1 := PRDFT(n, 1);
 irdft1 := IPRDFT(n, -1);
 # factorization
@@ -106,7 +107,7 @@ dtt := Compose(q, qtut, sigmaq).transpose();
 idtt := 2/m * Sqrt(2) * dtt.transpose();
 
 drf2 := MatSPL(dtt) * filt2;
-rcdiag2 := RCDiag(FList(TReal, List(Zip2(drf2, Flat(Replicate(m, [1, -1]))), Product)));
+rcdiag2 := RotDiag(drf2);
 
 # factorization
 rstep2 := idtt * rcdiag2 * dtt;
