@@ -79,10 +79,10 @@ InfinityNormMat(MatSPL(convcs) - convm);
 # Fast Real 1D Free Space Convolution without Domain Doubling
 
 # fast algorithm for step1
-drf1 := Flat(List(symbf{[1..n/2+1] * 2 - 1}, a->[Re(a), Im(a)]));
+drf1 := Flat(List(symbf{[1..n/2+1] * 2 - 1}, a->[Re(a), -Im(a)]));
 rcdiag1 := RCDiag(FList(TReal, drf1));
-rdft1 := PRDFT(n, -1);
-irdft1 := IPRDFT(n, 1);
+rdft1 := PRDFT(n, 1);
+irdft1 := IPRDFT(n, -1);
 # factorization
 rstep1 := irdft1 * rcdiag1 * rdft1;
 # correctness check
