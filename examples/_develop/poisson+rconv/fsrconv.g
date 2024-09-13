@@ -59,6 +59,7 @@ rstep1 := irdft1 * rcdiag1 * rdft1;
 InfinityNormMat(MatSPL(step1) - MatSPL(rstep1));
 
 # fast algorithm for step2
+# sigma derivation to be cleaned up
 m := n/2;
 
 q := 1/(Sqrt(2))*VStack(
@@ -81,16 +82,27 @@ beta := 2/m*Reversed(ut{[m+1..2*m]});
 sigma := VStack(
     HStack(Diag(alpha), J(Length(beta))*Diag(Reversed(beta))),
     HStack(-J(Length(beta))*Diag(beta), Diag(Reversed(alpha))));
+    
+sigmaq := DirectSum(I(m), J(m)) * L(n,2);
+sigmad := sigma^sigmaq;
+sigmad2 := RCDiag(FList(TReal, Flat(Zip2(alpha, -beta))));
+InfinityNormMat(MatSPL(sigmad)-MatSPL(sigmad2));    
+
+sigma2 := sigmaq * sigmad2 * sigmaq.transpose();
+InfinityNormMat(MatSPL(sigma2)-MatSPL(sigma));    
 
 rstep2 :=  q * qtut * sigma * qtut.transpose() * qt;
+rstep2d := q * qtut * sigmaq * sigmad2 * sigmaq.transpose() * qtut.transpose() * qt;
+
 InfinityNormMat(MatSPL(step2) - MatSPL(rstep2));
+InfinityNormMat(MatSPL(step2) - MatSPL(rstep2d));
 
 # full algorithm = real step1 + real step2
 rconv := SUM(rstep1, rstep2);
 InfinityNormMat(MatSPL(rconv) - convm);
 
 #==============================================================================
-# 2D case
+# separable 2D case
 
 conv2d := Tensor(conv, conv);
 conv2dm := MatSPL(conv2d);
@@ -104,7 +116,7 @@ rconv2d := SUM(rconv2d11, rconv2d12, rconv2d21, rconv2d22);
 InfinityNormMat(MatSPL(rconv2d) - conv2dm);
 
 #==============================================================================
-# 3D/nD case
+# separable 3D/nD case
 
 d := 3;
 convnd := ApplyFunc(Tensor, Replicate(d, conv));
