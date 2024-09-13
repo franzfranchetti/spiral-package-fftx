@@ -23,7 +23,7 @@ SkewCirculant := l -> Toeplitz(Reversed(l)::(-DropLast(Reversed(l), 1)));
 
 #==============================================================================
 # problem setup
-n := 8;
+n := 32;
 range := [1..2*n];
 filt := List(range, i->Random([1..100]));
 symbf := 1/(2*n) * MatSPL(DFT(2*n, -1)) * filt;
