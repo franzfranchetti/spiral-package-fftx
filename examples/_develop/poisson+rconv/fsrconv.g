@@ -36,9 +36,10 @@ tfilt := filt{[n+2..2*n]}::filt{[1]}::filt{[2..n]};
 cfilt := Reversed(tfilt{[1..n]});
 conv := Gath(fTensor(fBase(2,0), fId(n))) * DFT(2*n, 1) * Diag(symbf) * DFT(2*n, -1) * Scat(fTensor(fBase(2,0), fId(n)));
 convm := MatSPL(conv);
-#convt := Toeplitz(Reversed(convm[1])::Drop(TransposedMat(convm)[1],1));
-convt := Toeplitz(tfilt);
+convt := Toeplitz(Reversed(convm[1])::Drop(TransposedMat(convm)[1],1));
+convt2 := Toeplitz(tfilt);
 InfinityNormMat(convm - MatSPL(convt));
+InfinityNormMat(convm - MatSPL(convt2));
 
 # break free space convolutrion into sum of 2 convolutions of size n
 diag1 := Diag(symbf{[1..n] * 2 - 1});
@@ -75,11 +76,11 @@ InfinityNormMat(MatSPL(convcs) - convm);
 
 
 #==============================================================================
-# fast 1D real free space convolution without domain doubling
+# Fast Real 1D Free Space Convolution without Domain Doubling
 
 # fast algorithm for step1
-drf := Flat(List(symbf{[1..n/2+1] * 2 - 1}, a->[Re(a), Im(a)]));
-rcdiag1 := RCDiag(FList(TReal, drf));
+drf1 := Flat(List(symbf{[1..n/2+1] * 2 - 1}, a->[Re(a), Im(a)]));
+rcdiag1 := RCDiag(FList(TReal, drf1));
 rdft1 := PRDFT(n, -1);
 irdft1 := IPRDFT(n, 1);
 # factorization
@@ -93,7 +94,7 @@ dct := DCT2(m);
 dst := DST2(m);
 
 scale := Diag([1/Sqrt(2)]::Replicate(m-1, 1));
-q := 1/(Sqrt(2))*VStack(
+q := 1/Sqrt(2) * VStack(
     HStack(Mat([[Sqrt(2)]]), O(1, n-1)),
     HStack(O(n/2-1,1), I(n/2-1), O(n/2-1,1), J(n/2-1)),
     HStack(O(1, n/2), Mat([[Sqrt(2)]]), O(1, n/2-1)),
@@ -101,15 +102,15 @@ q := 1/(Sqrt(2))*VStack(
 );
 qtut := DirectSum(scale * dct, scale * J(m) * dst * J(m));
 sigmaq := DirectSum(I(m), J(m)) * L(n,2);
-sqt := q * qtut * sigmaq;
-sq := sqt.transpose();
+idtt := q * qtut * sigmaq;
+dtt := idtt.transpose();
 
-sigmat2 := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * sq;
-rcdiag2 := MatSPL(sigmat2) * filt2;
-sigmad2 := RCDiag(FList(TReal, rcdiag2));
+sigmat := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * dtt;
+drf2 := MatSPL(sigmat) * filt2;
+rcdiag2 := RCDiag(FList(TReal, drf2));
 
 # factorization
-rstep2 := sqt * sigmad2 * sq;
+rstep2 := idtt * rcdiag2 * dtt;
 # correctness check
 InfinityNormMat(MatSPL(step2) - MatSPL(rstep2));
 
