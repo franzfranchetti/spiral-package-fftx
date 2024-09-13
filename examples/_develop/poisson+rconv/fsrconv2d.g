@@ -23,7 +23,7 @@ SkewCirculant := l -> Toeplitz(Reversed(l)::(-DropLast(Reversed(l), 1)));
 
 #==============================================================================
 # problem setup
-n := 16;
+n := 32;
 range := [1..2*n];
 filt := List(range, i->Random([1..100]));
 symbf := 1/(2*n) * MatSPL(DFT(2*n, -1)) * filt;
@@ -102,11 +102,12 @@ q := 1/Sqrt(2) * VStack(
 );
 qtut := DirectSum(scale * dct, scale * J(m) * dst * J(m));
 sigmaq := DirectSum(I(m), J(m)) * L(n,2);
-dtt := Compose(q, qtut, sigmaq).transpose();
-idtt := 2/m * Sqrt(2) * dtt.transpose();
+idtt := q * qtut * sigmaq;
+dtt := idtt.transpose();
 
-drf2 := MatSPL(dtt) * filt2;
-rcdiag2 := RCDiag(FList(TReal, List(Zip2(drf2, Flat(Replicate(m, [1, -1]))), Product)));
+sigmat := 2/m * Sqrt(2) * Tensor(I(m), Diag(FList(TInt, [1,-1]))) * dtt;
+drf2 := MatSPL(sigmat) * filt2;
+rcdiag2 := RCDiag(FList(TReal, drf2));
 
 # factorization
 rstep2 := idtt * rcdiag2 * dtt;
