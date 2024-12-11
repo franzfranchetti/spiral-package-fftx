@@ -7,3 +7,4 @@ Include(mdprdft);
 Include(prunedmdprdft);
 Include(mdrconv);
 Include(resample);
+Include(hprod);
