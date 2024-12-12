@@ -13,12 +13,13 @@ Debug(true);
 # conf := LocalConfig.fftx.defaultConf();  
 conf := LocalConfig.fftx.confGPU();
 
-
-# test cases: 81^3, 189^3, 225^3, 315^3, 375^3, 729^3, and 225x225x169 
-# n := 729;
 d := 3;
-# szcube :=  Replicate(d, n);
-szcube := [225, 225, 169];
+
+#n := 64;
+#n := 128;
+#n := 256;
+n := 3*64;
+szcube :=  Replicate(d, n);
     
 name := "mdrconv"::StringInt(d)::"d_"::StringInt(szcube[1])::ApplyFunc(ConcatenationString, List(Drop(szcube, 1), s->"x"::StringInt(s)));
 

@@ -15,7 +15,7 @@ fwd := true;
 #fwd := false;
 
 d := 3;
-n := 64;
+n := 2*81;
 szcube := Replicate(d, n);
 pat := Replicate(d, [0..n/2-1]);
 
@@ -37,13 +37,15 @@ t := TFCall(ApplyFunc(prdft, [szcube, pat, k]),
 opts := conf.getOpts(t);
 
 tt := opts.tagIt(t);
-#_tt := opts.preProcess(tt);
-#
-#Debug(true);
-#rt := opts.search(_tt);
+_tt := opts.preProcess(tt);
+
+Debug(true);
+rt := opts.search(_tt);
 #s := SPLRuleTree(rt);
-#ss := opts.sumsRuleTree(rt);
+ss := opts.sumsRuleTree(rt);
 
 c := opts.fftxGen(tt);
 opts.prettyPrint(c);
 PrintTo(name::".cu", opts.prettyPrint(c));
+
+CMeasure (c, opts);

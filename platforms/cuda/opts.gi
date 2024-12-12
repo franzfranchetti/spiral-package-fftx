@@ -337,7 +337,14 @@ ParseOptsCUDA := function(conf, t)
        
         # detect 3D DFT/Batch DFT
         _tt := Collect(t, MDDFT)::Collect(t, MDPRDFT)::Collect(t, IMDPRDFT)::Collect(t, PrunedMDPRDFT)::Collect(t, PrunedIMDPRDFT);
-        if Length(_tt) = 1 and Length(_tt[1].params[1]) = 3 then
+        if Length(_tt) = 1 and Length(_tt[1].params[1]) = 3 or 
+#==============================================================================
+## detect bracket
+## FIXME: Need better guards
+            Length(_tt) = 2 and Length(Collect(t, HProduct)) = 1  
+#==============================================================================
+        
+        then
 #            if ObjId(_tt[1]) in [MDDFT] then
 #                _conf := FFTXGlobals.confBatchFFTCUDADevice();
 #            else
@@ -630,7 +637,6 @@ fi;
             _opts.operations.Print := s -> Print("<FFTX CUDA MDDST1 options record>");
             return _opts;
         fi;
-
         # we are doing nothing special
         return FFTXGlobals.getOpts(conf); 
     fi;
