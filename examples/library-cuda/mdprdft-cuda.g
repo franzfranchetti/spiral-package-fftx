@@ -15,8 +15,11 @@ conf := LocalConfig.fftx.confGPU();
 fwd := true;
 #fwd := false;
 
-N := 16;
+#N := 16;
 #N := 32;
+N := 64;
+#N := 128;
+#N := 256;
 #N := 35;
 #N := 272; #has prime factor 17
 #N := 128*3;
@@ -31,7 +34,7 @@ N := 16;
 #N := 768;
 #N := 1024;
 #N := 640;
-N := 648;
+#N := 648;
 szcube :=       Replicate(3, N);
 
 #szcube := [80, 80, 374];
@@ -60,9 +63,17 @@ t := TFCall(ApplyFunc(prdft, [szcube, k]),
 opts := conf.getOpts(t);
 tt := opts.tagIt(t);
 
+_tt := opts.preProcess(tt);
+rt := opts.search(_tt);
+ss := opts.sumsRuleTree(rt);
+
 c := opts.fftxGen(tt);
 opts.prettyPrint(c);
 PrintTo(name::".cu", opts.prettyPrint(c));
+
+PrintTo(name::"_rt.g", rt);
+PrintTo(name::"_ss.g", ss);
+
 
 CMeasure(c, opts);
 

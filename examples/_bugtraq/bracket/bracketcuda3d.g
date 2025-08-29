@@ -12,14 +12,14 @@ Import(realdft);
 conf := LocalConfig.fftx.confGPU(); # for CUDA
 
 # These should be added to FFTX library soon.
-Class(HProduct, RowVec);
+#Class(HProduct, RowVec);
 DefaultCodegen.HProduct := (self, o, y, x, opts) >> let(i := Ind(), func := o.element.lambda(),
         t := TempVar(x.t.t),
         chain(assign(t,1),
             loop(i, func.domain(), assign(t, mul(t, mul(func.at(i), nth(x,i))))),
             assign(nth(y,0), t)));
 
-nx:=8; ny:=7; nz:=6;
+nx:=128; ny:=128; nz:=128;
 nyTrunc := ny+2 - ny mod 2;
 nxhalf := (nx - nx mod 2) / 2;
 nyhalf := (ny - ny mod 2) / 2;
@@ -77,8 +77,11 @@ t := let(name := funcname,
     TFCall(convdag, rec(fname := name, params := [_X0, _Y0]))
 );
 
+Debug(true);
 opts := conf.getOpts(t);
 tt := opts.tagIt(t);
+_tt := opts.preProcess(tt);
+rt := opts.search(_tt);
 
 c := opts.fftxGen(tt);
 # opts.prettyPrint(c);

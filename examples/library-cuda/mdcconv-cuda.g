@@ -1,0 +1,14 @@
+Load(fftx); 
+ImportAll(fftx); 
+ImportAll(simt); 
+conf := LocalConfig.fftx.confGPU(); 
+szcube := [64, 64, 256]; 
+padcube := [[0..31],[0..31],[0..127]]; 
+symvar := var("symbl", TPtr(TReal)); 
+fdataofs := FDataOfs(symvar,1048576, 0); 
+name := "hockney_spiral"; 
+transform := TFCall( Compose([ ExtractBox(szcube, padcube), MDDFT(szcube, 1), RCDiag(fdataofs), MDDFT(szcube, -1), ZeroEmbedBox(szcube, padcube)]), rec(fname := name, params := [symvar]));
+opts:=conf.getOpts(transform); 
+tt:= opts.tagIt(transform);
+c:=opts.fftxGen(tt);
+opts.prettyPrint(c);

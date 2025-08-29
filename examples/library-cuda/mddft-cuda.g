@@ -17,7 +17,8 @@ conf := LocalConfig.fftx.confGPU();
 #     [ 224, 224, 100],
 #     [270, 270, 270],
 #     [272, 272, 272],
-szcube :=    [648, 648, 648 ];
+N := 64;
+szcube :=    Replicate(3, N);
 
 # for szcube in sizes do
 #     var.flush();
@@ -41,6 +42,10 @@ c := opts.codeSums(ss);
 c := opts.fftxGen(tt);
 opts.prettyPrint(c);
 PrintTo(name::".cu", opts.prettyPrint(c));
+
+PrintTo(name::"_rt.g", rt);
+PrintTo(name::"_ss.g", ss);
+
 #od;
 
 CMeasure(c, opts);

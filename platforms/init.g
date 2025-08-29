@@ -5,5 +5,5 @@
 LoadImport(fftx.platforms.cuda);
 LoadImport(fftx.platforms.hip);
 LoadImport(fftx.platforms.ia);
-LoadImport(fftx.platforms.opencl);
+#LoadImport(fftx.platforms.opencl);
 
