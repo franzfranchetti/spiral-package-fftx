@@ -123,9 +123,19 @@ NewRulesFor(MDPRDFT, rec(
                                tags := nt.getTags(),
                                prdft := PRDFT1(Last(a_lengths), a_exp),
                                rcdim := Rows(prdft),
+                               m := Product(DropLast(nt.params[1], 1)),
+                               nr := rcdim,
+                               rdft := prdft,
                                [ [ TCompose(List(DropLast(nt.params[1], 1), i->TRC(TTensorI(DFT(i, a_exp), rcdim * Product(DropLast(nt.params[1], 1))/(2*i), AVec, APar)))::
-                                           [ TGrp(TCompose([TL(rcdim * Product(DropLast(nt.params[1], 1)) / 2, rcdim / 2, 1, 2), 
-                                             TTensorI(PRDFT1(Last(a_lengths), a_exp), Product(DropLast(nt.params[1], 1)), APar, APar)])) ]).withTags(tags) ]] ),
+                                           [ 
+#                                            TGrp(TCompose([TL(rcdim * Product(DropLast(nt.params[1], 1)) / 2, rcdim / 2, 1, 2), 
+#                                                TTensorI(PRDFT1(Last(a_lengths), a_exp), Product(DropLast(nt.params[1], 1)), APar, APar)])) 
+#
+# TL(2*m, m, nr/2, 1) * TTensorI(rdft, m, AVec, APar)
+#
+                                            TGrp(TCompose([ TL(2*m, m, nr/2, 1), TTensorI(rdft, m, AVec, APar) ]))
+#                                                TTensorI(PRDFT1(Last(a_lengths), a_exp), Product(DropLast(nt.params[1], 1)), APar, APar)])) 
+                                            ]).withTags(tags) ]] ),
         apply := (nt, C, cnt) -> C[1]
     )
     

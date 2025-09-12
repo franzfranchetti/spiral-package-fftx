@@ -168,6 +168,7 @@ ParseOptsCUDA := function(conf, t)
     MAX_KERNEL := 26;
     MAX_PRIME := 17;
     MIN_SIZE := 32;
+#    MIN_SIZE := 4;
     MAX_SIZE := 680;
     MAGIC_SIZE := 4096;
     MAX_TWOPOWER := 16;
