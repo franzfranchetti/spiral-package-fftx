@@ -468,7 +468,7 @@ end;
 
 
 FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
-    local kernels, _s, newv, srt;
+    local kernels, _s, newv, srt, sx;
 #Error("Caught!");
 
     if IsBound(ss.ruletree) then srt := ss.ruletree; fi;
@@ -478,16 +478,37 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
     
 #    ss := SIMT_NextLoop(ss, ASIMTBlockDimY);
     ss := SIMT_NextLoop(ss, ASIMTBlockDimX);
-    
+   
     ss:= SubstTopDown(ss, @(1, SIMTSUM),
         e->let(
             its := @(1).val.simt_dim.params[1],
             ii := Ind(its),
-            ch := @(1).val.children(),
+            _ch := @(1).val.children(),
+            ch1 := Filtered(_ch, e->not ObjId(e) = ISum),
+            ch2 := Filtered(_ch, e->ObjId(e) = ISum),  
+            ch := ch1::Checked(Length(ch2) = 1, ch2), # sort the ISum to the end
+            extra_it := ch2[1].domain, 
             nch := Length(ch),
-            SIMTISum(@(1).val.simt_dim, ii, nch, SUM(List([0..nch-1], 
+            st := @(1).val.simt_dim,
+            p :=  st.params,
+            pp := [p[1], [p[2][1], p[2][2]+extra_it-1]],
+            stdim := ApplyFunc(ObjId(st), pp),
+            
+            SIMTISum(stdim, ii, nch+extra_it-1, SUM(List([0..nch-1], 
                i->COND(eq(ii, V(i)), _fBaseVar(ch[i+1], ii, i), ApplyFunc(OO, ch[i+1].dims()))))))
     );
+
+    # CAREFUL: This is a PRDFT_CT hack and assumes there is only ine ISum in the SIMTSUM -- thus the Checked() above
+    ss := SubstTopDown(ss, [@(1, COND), @(2, eq), @(3, ISum), @(4, OO)], e->let(
+        low := @(2).val.args[2],
+        hi := low + @(3).val.domain,
+        vr :=  @(2).val.args[1],
+        cnd := logic_and(geq(vr , low), lt(vr, hi)),
+        op := @(3).val.child(1),
+        COND(cnd, op, @(4).val)
+    ));
+
+#Error("Caught!");
 
     # loop distribution Grid Y(X*X)
     ss := SubstBottomUp(ss, [@(1, SIMTISum, e->ObjId(e.simt_dim) = ASIMTKernelFlag and ObjId(e.simt_dim.params[1]) = ASIMTBlockDimY), Compose], 
