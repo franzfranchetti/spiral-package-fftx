@@ -162,7 +162,7 @@ end;
 #FixUpCUDASigmaSPL_3Stage := (ss, opts) -> SubstTopDown(ss, @(1, Grp), e->e.child(1));
 FixUpCUDASigmaSPL_3Stage := function(ss, opts)
     local kernels, _s, newv;
-
+#Error("FixUpCUDASigmaSPL_3Stage");
     # drop grp
     ss := SubstTopDown(ss, @(1, Grp), e->e.child(1));
    
@@ -469,6 +469,7 @@ end;
 
 FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
     local kernels, _s, newv, srt;
+#Error("Caught!");
 
     if IsBound(ss.ruletree) then srt := ss.ruletree; fi;
 
@@ -489,7 +490,7 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
     );
 
     # loop distribution Grid Y(X*X)
-    ss := SubstBottomUp(ss, [@(1, SIMTISum, e->ObjId(e.simt_dim) = ASIMTKernelFlag), Compose], 
+    ss := SubstBottomUp(ss, [@(1, SIMTISum, e->ObjId(e.simt_dim) = ASIMTKernelFlag and ObjId(e.simt_dim.params[1]) = ASIMTBlockDimY), Compose], 
         e -> let(ch := @(1).val.child(1).children(), i := @(1).val.var, 
             nch := [ch[1] * Gath(fTensor(fBase(i), fId(Cols(ch[1]))))] :: 
                 List(ch{[2..Length(ch)-1]}, c -> Scat(fTensor(fBase(i), fId(Rows(c)))) * c * Gath(fTensor(fBase(i), fId(Cols(c))))) :: 
@@ -588,7 +589,7 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
     );
   
     # loop distribution Grid Y(X*X)
-    ss := SubstBottomUp(ss, [@(1, SIMTISum, e->ObjId(e.simt_dim) = ASIMTKernelFlag), Compose], 
+    ss := SubstBottomUp(ss, [@(1, SIMTISum, e->ObjId(e.simt_dim) = ASIMTKernelFlag and ObjId(e.simt_dim.params[1]) = ASIMTBlockDimY), Compose], 
         e -> let(ch := @(1).val.child(1).children(), i := @(1).val.var, 
             nch := [ch[1] * Gath(fTensor(fBase(i), fId(Cols(ch[1]))))] :: 
                 List(ch{[2..Length(ch)-1]}, c -> Scat(fTensor(fBase(i), fId(Rows(c)))) * c * Gath(fTensor(fBase(i), fId(Cols(c))))) :: 

@@ -4,23 +4,26 @@
 
 Load(fftx);
 ImportAll(fftx);
+Debug(true);
 
 # startup script should set LocalConfig.fftx.defaultConf() -> LocalConfig.fftx.confGPU() 
 # conf := LocalConfig.fftx.defaultConf();  
 conf := LocalConfig.fftx.confGPU();
 
-#n := 64;
-#n := 128;
-#n := 256;
-n := [64, 64, 256];
+nn := List([4..8], i->2^i);
 
-ns := [n[1]/2, n[2]/2, n[3]/2];
-nd := [n[1]/2, n[2]/2, n[3]/2];
+i := 3;
+n := nn[i];
+d := 3;
+n := Replicate(d, n);
 
+ns := List(n, i->i/2);
+nd := ns;
 
-t := let(name := "hockney", 
-        symvar := var("symbl", TPtr(TReal)),
-    TFCall(
+name := "rfsconv3d";
+symvar := var("symbl", TPtr(TReal));
+
+t := TFCall(
         Compose([
             ExtractBox(n, [[0..nd[1]-1],[0..nd[2]-1],[0..nd[3]-1]]),
             IMDPRDFT(n, 1),
@@ -28,8 +31,7 @@ t := let(name := "hockney",
             MDPRDFT(n, -1), 
             ZeroEmbedBox(n, [[0..ns[1]-1],[0..ns[2]-1],[0..ns[3]-1]])]),
         rec(fname := name, params := [symvar])
-    )
-);
+    );
 
 opts := conf.getOpts(t);
 tt := opts.tagIt(t);
@@ -37,4 +39,4 @@ tt := opts.tagIt(t);
 c := opts.fftxGen(tt);
 opts.prettyPrint(c);
 
-PrintLine("hockney-cuda: codegen test only (no compiled test with 'symbol')\t\t##PICKME##");
+PrintTo(name::".cu", opts.prettyPrint(c));
