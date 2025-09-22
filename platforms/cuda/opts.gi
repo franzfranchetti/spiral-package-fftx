@@ -607,7 +607,9 @@ fi;
     #                    FixUpCUDASigmaSPL_3Stage(s1, opts)); 
                     _opts.postProcessSums := (s, opts) -> let(s1 := ApplyStrategy(s, [ MergedRuleSet(RulesDiagStandalonePointwise, 
                             RulesFuncSimp, RulesSums, RulesSIMTFission) ], BUA, opts),
-                        When(Collect(t, MDPRDFT)::Collect(t, IMDPRDFT) = [], 
+                        When(
+                            Collect(_opts.preProcess(t), MDRConv)::Collect(_opts.preProcess(t), IOPrunedMDRConv)::Collect(t, MDPRDFT)::Collect(t, IMDPRDFT)
+                             = [], 
                             FixUpCUDASigmaSPL_3Stage(s1, opts),
                             FixUpCUDASigmaSPL_3Stage_Real(s1, opts))); 
     
