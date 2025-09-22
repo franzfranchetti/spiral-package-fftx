@@ -438,6 +438,40 @@ fi;
                     _opts.tags := [ASIMTKernelFlag(ASIMTGridDimX), ASIMTGridDimY, ASIMTBlockDimY, ASIMTBlockDimX];
                 else
                     _opts.operations.Print := s -> Print("<FFTX CUDA HPC MDDFT/MDPRDFT/MDIPRDFT options record>");
+                    
+#-------------------------------                    
+# MDPRDFT/IMPRDFT fixes                    
+                    
+            spiral.formgen._applicable :=
+                (R, nt, ruleset) -> 
+                    (not Same(ruleset, ApplicableTable) or R.switch) and 
+                    (R.nonTerminal=@ or R.nonTerminal = ObjId(nt)) and
+                    ((nt.transposed = R.transposed) or (nt.transpose()=nt)) and 
+                    # guard for old rules that cannot be used if a tag is present
+                    When(IsNewRule(R), true,
+                        When((not IsBound(R.requiresNoTag)) or (IsBound(R.requiresNoTag) and (not R.requiresNoTag)), true,     
+                            R.requiresNoTag and (not nt.hasTags()))) and
+                    # R.requiredFirstTag is obsolete
+                    When(not IsNewRule(R) or not IsBound(R.requiredFirstTag), true,
+                	When(IsBound(nt.firstTag), 
+                            When(IsList(R.requiredFirstTag), 
+                                 nt.firstTag().kind() in R.requiredFirstTag,
+                                 nt.firstTag().kind()  = R.requiredFirstTag), false)) and
+                    # R.a.requiredFirstTag is the better way of setting mandatory tags
+                    When(not IsNewRule(R) or not IsBound(R.a.requiredFirstTag), true,
+                	When(IsBound(nt.firstTag), 
+                            When(IsList(R.a.requiredFirstTag), 
+                                 nt.firstTag().kind() in R.a.requiredFirstTag,
+                                 nt.firstTag().kind()  = R.a.requiredFirstTag), false)) and
+                    When(IsNewRule(R), 
+                            SReduceSimple(R.applicable(nt)) <> false, 
+                            R.isApplicable(nt.params));
+            
+            _opts.breakdownRules.TFCall := _opts.breakdownRules.TFCall::[TFCall_drop_tag2];
+            _opts.breakdownRules.PRDFT[3].requiresNoTag := true;
+            _opts.breakdownRules.IPRDFT[3].requiresNoTag := true;
+                    
+#-------------------------------                    
 #                    _opts.tags := [ASIMTKernelFlag(ASIMTGridDimX), ASIMTBlockDimY, ASIMTBlockDimX];
                     if ObjId(_tt[1]) = MDDFT and ForAny(_tt[1].params[1], i -> i >= MAX_SIZE) then
                         _opts.tags := [ASIMTKernelFlag(ASIMTGridDimX), ASIMTBlockDimX];
