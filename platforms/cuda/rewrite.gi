@@ -504,7 +504,7 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
         hi := low + @(3).val.domain,
         vr :=  @(2).val.args[1],
         cnd := logic_and(geq(vr , low), lt(vr, hi)),
-        op := @(3).val.child(1),
+        op := SubstVars(@(3).val.child(1), rec((@(3).val.var.id) := vr - low)),
         COND(cnd, op, @(4).val)
     ));
 

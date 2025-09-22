@@ -193,9 +193,24 @@ NewRulesFor(IMDPRDFT, rec(
                                iprdft := IPRDFT1(Last(a_lengths), a_exp),
                                rdim := Rows(iprdft),
                                cdim := Cols(iprdft),
-                               [ [ TCompose([ TGrp(TCompose([
-                                             TTensorI(IPRDFT1(Last(a_lengths), a_exp), Product(DropLast(a_lengths, 1)), APar, APar),
-                                             TL(cdim * Product(DropLast(a_lengths, 1)) / 2, Product(DropLast(a_lengths, 1)), 1, 2), 
+                               
+                               m := Product(DropLast(nt.params[1], 1)),
+                               rcdim := Cols(iprdft),
+
+                               nc := rcdim,
+                               irdft := iprdft,
+                               
+                               
+                               
+                               [ [ TCompose([ 
+                                        TGrp(TCompose([
+#                                             TTensorI(IPRDFT1(Last(a_lengths), a_exp), Product(DropLast(a_lengths, 1)), APar, APar),
+#                                             TL(cdim * Product(DropLast(a_lengths, 1)) / 2, Product(DropLast(a_lengths, 1)), 1, 2), 
+                                           
+
+TGrp(TCompose([ TTensorI(irdft, m, APar, AVec), TL(2*m, 2, nc/2, 1) ]))                                           
+                                           
+                                             
                                        ])) ] ::
                                        Reversed(List(DropLast(a_lengths, 1), i->TRC(TTensorI(DFT(i, a_exp), cdim * Product(DropLast(a_lengths, 1))/(2*i), APar, AVec))))
                                     ).withTags(tags) ]] ),
