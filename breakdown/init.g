@@ -5,6 +5,7 @@
 Include(breakdown);
 Include(resample);
 Include(tspl);
+Include(rdft);
 Include(mdprdft);
 Include(prune);
 Include(mdrconv);
