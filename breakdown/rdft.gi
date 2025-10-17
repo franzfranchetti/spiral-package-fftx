@@ -1,11 +1,25 @@
+_useOmega := false;
+
 _conjEvenIPRDFT := function(n, k)
-    local ii, _rcdf1, _rcdf2, r12, spl;
+    local ii, _rcdf1, _rcdf2, r12, spl, j;
 
     ii := Ind((n-2)/2);
+    j := Ind(n-2);
 
-    _rcdf1 := RCData(diagAdd(diagMul(fConst(TComplex, n/2-1, Cplx(0, 1)), fCompose(dOmega(n, k), fAdd(n/2, n/2-1, 1))), fConst(TReal, n/2-1, 1)));
-    _rcdf2 := diagMul(RCData(diagAdd(fCompose(dOmega(n, k), fAdd(n/2, n/2-1, 1), J(n/2-1)), fConst(TComplex, n/2-1, E(4)))), 
-        diagTensor(fConst(TReal, n/2-1, 1), FList(TReal, [1, -1])));
+    if _useOmega then
+        _rcdf1 := RCData(diagAdd(diagMul(fConst(TComplex, n/2-1, Cplx(0, 1)), fCompose(dOmega(n, k), fAdd(n/2, n/2-1, 1))), fConst(TReal, n/2-1, 1)));
+        _rcdf2 := diagMul(RCData(diagAdd(fCompose(dOmega(n, k), fAdd(n/2, n/2-1, 1), J(n/2-1)), fConst(TComplex, n/2-1, E(4)))), 
+            diagTensor(fConst(TReal, n/2-1, 1), FList(TReal, [1, -1])));
+    else            
+        _rcdf1 := Lambda(j, cond(eq(0, imod(j, 2)),
+            1-sinpi(k*fdiv(tcast(TDouble, idiv(j,2)+1),tcast(TDouble, n/2))),
+             cospi(k*fdiv(tcast(TDouble, idiv(j-1, 2)+1),tcast(TDouble, n/2)))
+            ));
+        _rcdf2 := Lambda(j, cond(eq(0, imod(j, 2)), 
+            -cospi(k*fdiv(tcast(TDouble, idiv(j,2)+1),tcast(TDouble, n/2))),
+            -1-sinpi(k*fdiv(tcast(TDouble, idiv(j-1, 2)+1),tcast(TDouble, n/2)))
+            ));
+    fi;    
 
     r12 := F(2) * Gath(fStack(fBase(n+2,0), fBase(n+2, n)));
     spl := 
@@ -20,20 +34,33 @@ _conjEvenIPRDFT := function(n, k)
 end;
 
 _conjEvenPRDFT := function(N, rot)
-    local ii, d2af, d2bf, conjd, spl;
+    local ii, d2af, d2bf, spl, j;
 
     ii := Ind((N-2)/2);
-    
-    d2af := diagAdd(diagMul(fConst(TComplex, N/2-1, 1/2 * Cplx(0, -1)), fCompose(dOmega(N, rot), fAdd(N/2, N/2-1, 1))), fConst(TReal, N/2-1, 1/2));
-    d2bf := diagAdd(diagMul(fConst(TComplex, N/2-1, -1/2 * Cplx(0, -1)), fCompose(dOmega(N, rot), fAdd(N/2, N/2-1, 1))), fConst(TReal, N/2-1, 1/2));
-    conjd := diagTensor(fConst(TReal, (N-2)/2, 1), FList(TReal, [1, -1]));
+    j := Ind(N-2);
+#Error();
+
+    if _useOmega then
+        d2af := RCData(diagAdd(diagMul(fConst(TComplex, N/2-1, 1/2 * Cplx(0, -1)), fCompose(dOmega(N, rot), fAdd(N/2, N/2-1, 1))), fConst(TReal, N/2-1, 1/2)));
+        d2bf := RCData(diagAdd(diagMul(fConst(TComplex, N/2-1, -1/2 * Cplx(0, -1)), fCompose(dOmega(N, rot), fAdd(N/2, N/2-1, 1))), fConst(TReal, N/2-1, 1/2)));
+    else
+        d2af := Lambda(j, cond(eq(0, imod(j, 2)), 
+            1/2*(1+sinpi(rot*fdiv(tcast(TDouble, idiv(j,2)+1), tcast(TDouble, N/2)))),
+            -1/2*(cospi(rot*fdiv(tcast(TDouble, j+1), tcast(TDouble, N))))
+        ));
+        d2bf := Lambda(j, cond(eq(0, imod(j, 2)), 
+            1/2*(1-sinpi(rot*fdiv(tcast(TDouble, idiv(j,2)+1), tcast(TDouble, N/2)))),
+            1/2*(cospi(rot*fdiv(tcast(TDouble, j+1), tcast(TDouble, N))))
+        ));
+        
+    fi;
     spl := VStack(
         DirectSum(
             Blk([[1,1],[0,0]]),
             ISum(ii, (N-2)/2, 
                 Scat(fTensor(fBase(ii), fId(2))) * _HStack(I(2), I(2)) * VStack(
-                    RCDiag(RCData(fCompose(fPrecompute(d2af), fBase(ii)))) * Gath(fTensor(fBase(ii), fId(2))),
-                    RCDiag(RCData(fCompose(fPrecompute(d2bf), fBase(ii)))) * Diag(FList(TReal, [1, -1])) * Gath(fTensor(fCompose(fTensor(J((N-2)/2)), fBase(ii)), fId(2))) 
+                    RCDiag(fCompose(fPrecompute(d2af), fTensor(fBase(ii), fId(2)))) * Gath(fTensor(fBase(ii), fId(2))),
+                    RCDiag(fCompose(fPrecompute(d2bf), fTensor(fBase(ii), fId(2)))) * Diag(FList(TReal, [1, -1])) * Gath(fTensor(fCompose(fTensor(J((N-2)/2)), fBase(ii)), fId(2))) 
                 )
             )
         ),
