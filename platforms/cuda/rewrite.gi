@@ -460,6 +460,10 @@ FixUpTeslaV_Code := function (c, opts)
 
         
     fi;
+    
+    # fixing up unevaluated values
+    c := SubstBottomUp(c, @(1, data, e-> ObjId(e.var.t) = TArray and ForAny(e.value.v, j->not IsValue(j))), 
+        e->data(e.var, V(List(e.value.v, j->V(j.ev()))), e.cmd));
 
     return c;
 end;
@@ -478,20 +482,19 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
     
 #    ss := SIMT_NextLoop(ss, ASIMTBlockDimY);
     ss := SIMT_NextLoop(ss, ASIMTBlockDimX);
-   
     ss:= SubstTopDown(ss, @(1, SIMTSUM),
         e->let(
-            its := @(1).val.simt_dim.params[1],
-            ii := Ind(its),
             _ch := @(1).val.children(),
             ch1 := Filtered(_ch, e->not ObjId(e) = ISum),
             ch2 := Filtered(_ch, e->ObjId(e) = ISum),  
+            its := Maximum(@(1).val.simt_dim.params[1], ch2[1].domain + Length(ch1)),
+            ii := Ind(its),
             ch := ch1::Checked(Length(ch2) = 1, ch2), # sort the ISum to the end
             extra_it := ch2[1].domain, 
             nch := Length(ch),
             st := @(1).val.simt_dim,
             p :=  st.params,
-            pp := [p[1], [p[2][1], p[2][2]+extra_it-1]],
+            pp := [Maximum(p[1], Length(ch1) + extra_it), [p[2][1], p[2][2]+extra_it-1]],
             stdim := ApplyFunc(ObjId(st), pp),
             
             SIMTISum(stdim, ii, nch+extra_it-1, SUM(List([0..nch-1], 
