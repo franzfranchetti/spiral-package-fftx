@@ -96,7 +96,7 @@ RewriteRules(RulesFFTXPromoteNT, rec(
             symf := Lambda(ii, nth(sym,ii)),
             opat := List(@(8).val.children(), i-> _toSymList(List(i.tolist(), _unwrap))),
             ipat := List(@(9).val.children(), i-> _toSymList(List(i.tolist(), _unwrap))),
-        [ IOPrunedMDRConv(@(1).val.params[1], symf, 1, opat, 1, ipat, true) ])),
+        [ IOPrunedMDRConv(@(1).val.params[1], symf, 1, opat, 1, ipat, True) ])),
         
 # DAG to Compose rules
     DAG_collapse1 := Rule([@(1, TDAG), ..., @(2, TDAGNode, e->ForAny(Drop(@(1).val.params[1], 1), k->k.params[3] = e.params[2])), ...], 
