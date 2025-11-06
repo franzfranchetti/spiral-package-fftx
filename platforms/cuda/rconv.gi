@@ -155,9 +155,7 @@ NewRulesFor(IOPrunedMDRConv, rec(
     ),
     
 
-
-    ## GPU/TITAN V Hockney algotithm variant
-    ## 2-trip, 5-step, ZYX ====================================================
+    # Hockney–Eastwood streamed FFT algorithm, xyz
     IOPrunedMDRConv_3D_5step := rec(
        forTransposition := false,
        applicable :=  (self, nt) >> nt.hasTags() and Length(nt.params[1]) = 3 and IsFunc(nt.params[7]) and nt.params[7]()
