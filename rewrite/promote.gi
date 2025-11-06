@@ -76,7 +76,8 @@ RewriteRules(RulesFFTXPromoteNT, rec(
             
 # This is one mega promotion rule for Hockney that needs to be broken apart after MDRConv and/or PrunedMDRDFT is introduced
     Hockney_hack := ARule(Compose, [[@(6, Gath), @(8,fTensor, e->ForAll(e.children(), i->ObjId(i)=fAdd))],
-                                     @(1,IMDPRDFT, e -> e.params[2] = 1), [@(2,RCDiag), @(4, FDataOfs, e->e.ofs = 0), @(5,I)], 
+                                     [@(10, Scale), @(11), @(1, IMDPRDFT, e -> (e.params[2] = 1) and (@(11).val * Product(e.params[1]) = 1))], 
+                                     [@(2,RCDiag), @(4, FDataOfs, e->e.ofs = 0), @(5,I)], 
                                      @(3,MDPRDFT, e -> e.params[2] = Product(e.params[1])-1),
                                      [@(7, Scat), @(9,fTensor, e->ForAll(e.children(), i->ObjId(i)=fAdd))]],
         e-> let(ii := Ind(Rows(@(2).val)),
@@ -88,8 +89,9 @@ RewriteRules(RulesFFTXPromoteNT, rec(
         
 # This is one mega promotion rule for Hockney that needs to be broken apart after MDRConv and/or PrunedMDRDFT is introduced
     Hockney_hack2 := ARule(Compose, [[@(6, Gath), @(8,fTensor, e->ForAll(e.children(), i->ObjId(i)=fAdd))],
-                                     @(1,IMDPRDFT, e -> e.params[2] = 1), [@(2,RCDiag), @(4, FData), @(5,I)], 
-                                     @(3,MDPRDFT, e -> e.params[2] = Product(e.params[1])-1),
+                                     [@(10, Scale), @(11), @(1, IMDPRDFT, e -> (e.params[2] = 1) and (@(11).val * Product(e.params[1]) = 1))], 
+                                     [@(2, RCDiag), @(4, FData), @(5,I)], 
+                                     @(3, MDPRDFT, e -> e.params[2] = Product(e.params[1])-1),
                                      [@(7, Scat), @(9,fTensor, e->ForAll(e.children(), i->ObjId(i)=fAdd))]],
         e-> let(ii := Ind(Rows(@(2).val)),
             sym := @(2).val.element.var,
