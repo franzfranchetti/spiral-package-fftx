@@ -168,39 +168,17 @@ NewRulesFor(IOPrunedMDRConv, rec(
                             opats := nt.params[4],
                             iblk := nt.params[5],
                             ipats := nt.params[6],
-                            nfreq := nlist[1]/2+1,
-                            i := Ind(nfreq*nlist[2]),
-                            hfunc := Cond(ObjId(diag) = Lambda,
-                                let(j := Ind(nlist[3]),
-                                    # Lambda(j, cxpack(diag.at(2*(j + i*nlist[3])), diag.at(2*(j + i*nlist[3])+1)))
-                                    pos := i +j*nfreq*nlist[2],
-                                    Lambda(j, cxpack(diag.at(2*pos), diag.at(2*pos+1)))
-                                ),
-                                ObjId(diag) = FDataOfs,
-                                let(j := Ind(nlist[3]),
-                                    # Lambda(j, cxpack(diag.at(2*(j + i*nlist[3])), diag.at(2*(j + i*nlist[3])+1)))
-                                    pos := i +j*nfreq*nlist[2],
-                                    Lambda(j, cxpack(diag.at(2*pos), diag.at(2*pos+1)))
-                                ),
-
-                                ObjId(diag) = fUnk,
-                                fUnk(TComplex, nlist[3]),
-#                                ObjId(diag) = FDataOfs,
-#                                diag,
-#                                fCompose(diagMul(fConst(TReal, diag.domain(),1/Product(nlist)), CRData(diag))),
-                                let(list := nt.params[2].list,  # here we assume FList(TReal, [...])
-                                    clist := List([1..Length(list)/2], i->Cplx(list[2*i-1], list[2*i])),
-                                    fc := FList(TComplex, clist),
-                                    gf := fTensor(fBase(i), fId(nlist[3])),
-                                    fCompose(fc, gf)
-                                )
-                            ), 
+                            nfreq := nlist[3]/2+1,
+                            i := Ind(nfreq),
+                            j := Ind(nlist[2]),
+                            ii := j*nfreq + i,
+                            hfunc := fCompose(diagMul(fConst(TReal, nlist[1], 1/Product(nt.params[1])), CRData(diag)), fTensor(fId(nlist[1]), fBase(nfreq*nlist[2], ii))),
                             [[ PrunedPRDFT(nlist[3], -1, iblk, ipats[1]),  # stage 1: PRDFT z
                                 PrunedDFT(nlist[2], -1, iblk, ipats[2]),    # stage 2: DFT y
                                 IOPrunedConv(nlist[1], hfunc, oblk, opats[1], iblk, ipats[1], true), # stage 3+4+5: complex conv in z
                                 PrunedIDFT(nlist[2], 1, oblk, opats[2]), # stage 6: iDFT in y
                                 PrunedIPRDFT(nlist[3], 1, oblk, opats[3]),   # stage 7: iPRDFT in x
-                                InfoNt(i)
+                                InfoNt([i, j])
                             ]]),
 
        apply := (nt, C, cnt) -> let(prdft1d := C[1],
@@ -208,7 +186,8 @@ NewRulesFor(IOPrunedMDRConv, rec(
                                     iopconv := C[3],
                                     ipdft1d := C[4],
                                     iprdft1d := C[5],
-                                    i := cnt[6].params[1],
+                                    i := cnt[6].params[1][1],
+                                    j := cnt[6].params[1][2],
                                     nlist := nt.params[1],
                                     n1 := nlist[3],
                                     nfreq := nlist[3]/2+1,
@@ -227,17 +206,10 @@ NewRulesFor(IOPrunedMDRConv, rec(
 
                                     stage1 := Tensor(I(ns1*ns2), prdft1d),
                                     stage2 := Tensor(I(ns1), RC(pdft1d), I(nfreq)),
-                                    stage543 := IDirSum(i, RC(iopconv)),
+                                    stage543 := Grp(L(n1*n2*nfreq, n2*nfreq) * IDirSum(j, IDirSum(i, RC(iopconv))) * L(n1*n2*nfreq, n1)),
                                     stage6 := Tensor(I(ns1), RC(ipdft1d), I(nfreq)),
                                     stage7 := Tensor(I(ns1*ns2), iprdft1d),
                                     
-#                                    stage1 := L(2*nfreq*ns3*ns2, ns3) * Tensor(I(ns2), Tensor(L(2*nfreq, 2) * prdft1d, I(ns3))) * Tensor(L(ns2*ns1, ns2), I(ns3)),
-#                                    stage2 := Tensor(I(ns3), Tensor(RC(pdft1d), I(nfreq))),
-#                                    pp := Tensor(L(ns3*n2*nfreq, n2*nfreq), I(2)) * Tensor(I(ns3), L(2*nfreq*n2, nfreq)),
-#                                    ppi := Tensor(I(nd3), L(2*nfreq*n2, 2*n2)) * Tensor(L(nd3*n2*nfreq, nd3), I(2)),
-#                                    stage543 := ppi * IDirSum(i, RC(iopconv)) * pp,
-#                                    stage76 := Tensor(L(nd2*nd1, nd1), I(nd3)) * Grp(Tensor((Tensor(I(nd2), iprdft1d * L(2*nfreq, nfreq)) *
-#                                        Tensor(RC(ipdft1d), I(nfreq))), I(nd3)) * L(2*nfreq*nd3*n2, 2*nfreq*n2)),
                                     conv3dr := stage7 * stage6 * stage543 * stage2 * stage1,
                                     conv3dr
                             )
