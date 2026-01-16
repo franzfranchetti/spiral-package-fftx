@@ -205,7 +205,6 @@ NewRulesFor(IOPrunedMDRConv, rec(
                                     nxd := oblk * Length(opats[3]),
                                     nyd := oblk * Length(opats[2]),
                                     nzd := oblk * Length(opats[1]),
-#                                    Error(),
                                     stage1 := Tensor(I(nzs*nys), prdft1d),
                                     stage2 := RC(Tensor(I(nzs), pdft1d, I(nxf))),
                                     stage543 := RC(L(nzd*ny*nxf, nzd) * IDirSum(j, IDirSum(i, iopconv)) * L(nzs*ny*nxf, nxf*ny)),
