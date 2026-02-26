@@ -243,5 +243,116 @@ NewRulesFor(IOPrunedMDRConv, rec(
                                     conv3dr := stage7 * stage6 * stage543 * stage2 * stage1,
                                     conv3dr
                             )
+    ),
+#==============================================================================
+# FIgure out how to flip the tensor products for the CUDA/SIMT case above
+
+    IOPrunedMDRConv_tSPL_5stage_flip := rec(
+       forTransposition := false,
+       applicable :=  (self, nt) >> nt.hasTags() and Length(nt.params[1]) = 3 and IsFunc(nt.params[7]) and nt.params[7]()
+                                    and nt.params[3] = 1 and nt.params[5] = 1, 
+
+       children  := nt -> let( nlist := nt.params[1],
+                               diag := nt.params[2],
+                               oblk := nt.params[3],
+                               opats := nt.params[4],
+                               iblk := nt.params[5],
+                               ipats := nt.params[6],
+                               nn := Product(nlist),
+                               nz := nlist[1],
+                               ny := nlist[2],
+                               nx := nlist[3],
+                               nxf := nx/2+1,
+                               i := Ind(nxf),
+                               j := Ind(ny),                               
+                               hfunc := fCompose(diagMul(fConst(TReal, nz, 1/nn), CRData(diag)), fTensor(fId(nz), fBase(j), fBase(i))),
+
+                               prdft1d := PrunedPRDFT(nx, -1, iblk, ipats[3]),      # stage 1: PRDFT x
+                               pdft1d := PrunedDFT(ny, -1, iblk, ipats[2]),         # stage 2: DFT y
+                               iopconv := IOPrunedConv(nz, hfunc, oblk, opats[1], iblk, ipats[1], true), # stage 3+4+5: complex conv in z
+                               ipdft1d := PrunedIDFT(ny, 1, oblk, opats[2]),        # stage 6: iDFT in y
+                               iprdft1d := PrunedIPRDFT(nx, 1, oblk, opats[3]),     # stage 7: iPRDFT in x
+                               nlist := nt.params[1],
+                               nxs := iblk * Length(ipats[3]),
+                               nys := iblk * Length(ipats[2]),
+                               nzs := iblk * Length(ipats[1]),
+                               nxd := oblk * Length(opats[3]),
+                               nyd := oblk * Length(opats[2]),
+                               nzd := oblk * Length(opats[1]),
+                               
+                               stage7 := TGrp(TCompose([TTensorI(iprdft1d, nzd*nyd, APar, APar), TL(nzd*nyd*nxf, nzd*nyd, 1, 2)])),  
+                               stage6 := TGrp(TRC(TCompose([TTensorI(TTensorI(ipdft1d, nxf, APar, APar), nzd, APar, APar), TL(nzd*ny*nxf, nxf, 1, 1)]))),
+                               stage543 := TGrp(TRC(TCompose([TL(nzd*ny*nxf, nzd, 1 ,1), 
+                                    TTensorInd(TTensorInd(iopconv, i, APar, APar), j, APar, APar), TL(nzs*ny*nxf, nxf*ny, 1, 1)]))),
+                               stage2 := TGrp(TRC(TCompose([TL(nzs*ny*nxf, nzs*ny, 1, 1), TTensorI(pdft1d, nxf*nzs, APar, APar)]))),
+                               stage1 := TGrp(TCompose([TL(nzs*nys*nxf, nxf, 1, 2), TTensorI(prdft1d, nzs*nys, APar, APar)])),
+                                    
+                               conv3dr := TCompose([stage7, stage6, stage543, stage2, stage1]),
+                               
+                               [[ conv3dr.withTags(nt.getTags()) ]]
+        ),
+
+        apply := (nt, C, cnt) -> C[1]
+    ),
+
+    # Hockney–Eastwood streamed FFT algorithm, xyz
+    IOPrunedMDRConv_3D_5step_flip := rec(
+       forTransposition := false,
+       applicable :=  (self, nt) >> nt.hasTags() and Length(nt.params[1]) = 3 and IsFunc(nt.params[7]) and nt.params[7]()
+                                    and nt.params[3] = 1 and nt.params[5] = 1, 
+       children := nt -> let(nlist := nt.params[1],
+                            diag := nt.params[2],
+                            oblk := nt.params[3],
+                            opats := nt.params[4],
+                            iblk := nt.params[5],
+                            ipats := nt.params[6],
+                            nn := Product(nlist),
+                            nz := nlist[1],
+                            ny := nlist[2],
+                            nx := nlist[3],
+                            nxf := nx/2+1,
+                            i := Ind(nxf),
+                            j := Ind(ny),
+                            hfunc := fCompose(diagMul(fConst(TReal, nz, 1/nn), CRData(diag)), fTensor(fId(nz), fBase(j), fBase(i))),
+                            [[ PrunedPRDFT(nx, -1, iblk, ipats[3]),  # stage 1: PRDFT x
+                                PrunedDFT(ny, -1, iblk, ipats[2]),    # stage 2: DFT y
+                                IOPrunedConv(nz, hfunc, oblk, opats[1], iblk, ipats[1], true), # stage 3+4+5: complex conv in z
+                                PrunedIDFT(ny, 1, oblk, opats[2]), # stage 6: iDFT in y
+                                PrunedIPRDFT(nx, 1, oblk, opats[3]),   # stage 7: iPRDFT in x
+                                InfoNt([i, j])
+                            ]]),
+
+       apply := (nt, C, cnt) -> let(prdft1d := C[1],
+                                    pdft1d := C[2],
+                                    iopconv := C[3],
+                                    ipdft1d := C[4],
+                                    iprdft1d := C[5],
+                                    i := cnt[6].params[1][1],
+                                    j := cnt[6].params[1][2],
+                                    nlist := nt.params[1],
+                                    nn := Product(nlist),
+                                    nz := nlist[1],
+                                    ny := nlist[2],
+                                    nx := nlist[3],
+                                    nxf := nx/2+1,
+                                    oblk := nt.params[3],
+                                    opats := nt.params[4],
+                                    iblk := nt.params[5],
+                                    ipats := nt.params[6],
+                                    nxs := iblk * Length(ipats[3]),
+                                    nys := iblk * Length(ipats[2]),
+                                    nzs := iblk * Length(ipats[1]),
+                                    nxd := oblk * Length(opats[3]),
+                                    nyd := oblk * Length(opats[2]),
+                                    nzd := oblk * Length(opats[1]),
+                                    stage7 := Tensor(I(nzd*nyd), iprdft1d) * RC(L(nzd*nyd*nxf, nzd*nyd)),
+                                    stage6 := RC(Tensor(I(nxf*nzd), ipdft1d)* L(nzd*ny*nxf, nxf)),
+                                    stage543 := RC(L(nzd*ny*nxf, nzd) * IDirSum(j, IDirSum(i, iopconv)) * L(nzs*ny*nxf, nxf*ny)),
+                                    stage2 := RC(L(nzs*ny*nxf, nzs*ny) * Tensor(I(nxf*nzs), pdft1d)),
+                                    stage1 := RC(L(nzs*nys*nxf, nxf)) * Tensor(I(nzs*nys), prdft1d),
+                                    conv3dr := stage7 * stage6 * stage543 * stage2 * stage1, 
+                                    #Error(),
+                                    conv3dr
+                            )
     )
 ));
