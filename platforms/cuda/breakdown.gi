@@ -301,8 +301,27 @@ NewRulesFor(TTensorInd, rec(
             k:= Ind(When(remainder = 1, kj[1], peelof)), j := Ind(When(remainder = 1, kj[2], remainder)),
             [[  TTensorInd(TTensorInd(SubstVars(Copy(nt.params[1]), rec((nt.params[2].id):=j * k.range + k)), k, APar, APar), j, APar, APar).withTags(nt.getTags()) ]]),
         apply := (nt, c, cnt) -> c[1]
-    )
+    ),
     
+# need to try explicit tiling for 5 pass IOPrunedMDRConv -- not sure yet how to do this right...
+
+    TTensorInd_SIMT_tile := rec(
+        info := "IxA tile",
+        forTransposition := false,
+        applicable := nt -> nt.hasTags() and _isSIMTTag(nt.firstTag()) and IsParPar(nt.params),
+        children := nt -> [ Cond(nt.getTags() = [ASIMTBlockDimX] and Filtered(List(Factors(nt.params[2].range), i->[i, i*Maximum(nt.params[1].dims())]), j->j[2] <= 1024/8) <> [], 
+            [
+                let(lr := Filtered(List(Factors(nt.params[2].range), i->[i, i*Maximum(nt.params[1].dims())]), j->j[2] <= 1024/8)[1][1], 
+                    peel := nt.params[2].range/lr,
+                    j:= Ind(peel), k := Ind(lr),
+                    TTensorInd(TTensorInd(SubstVars(Copy(nt.params[1]), rec((nt.params[2].id):=j * k.range + k)), k, APar, APar), j, APar, APar).withTags([ASIMTGridDimY, ASIMTBlockDimY]))
+            ],
+            [ nt.params[1].withTags(Drop(nt.getTags(), 1)), InfoNt(nt.params[2]) ]) ],
+        apply := (nt, c, cnt) -> When(Length(c) = 1, c[1], 
+            SIMTIDirSum(_toSIMTDim(
+                When(nt.getTags() = [ASIMTBlockDimY], [ASIMTBlockDimX], nt.getTags()),
+                cnt[2].params[1].range), cnt[2].params[1], cnt[2].params[1].range, c[1])
+    ))
 ));
 
 
