@@ -479,6 +479,7 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
 
     # drop grp
     ss := SubstTopDown(ss, @(1, Grp), e->e.child(1));
+#Error("Caught!");
     
 #    ss := SIMT_NextLoop(ss, ASIMTBlockDimY);
     ss := SIMT_NextLoop(ss, ASIMTBlockDimX);
@@ -655,3 +656,5 @@ FixUpCUDASigmaSPL_3Stage_Real := function(ss, opts)
     
     return ss;
 end;
+
+
